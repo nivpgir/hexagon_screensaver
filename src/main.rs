@@ -1,4 +1,5 @@
 use macroquad::prelude::*;
+use std::f32::consts::PI;
 
 
 const THRESHOLD: f32 = 0.999; // Only visible when sine > 0.95
@@ -23,7 +24,7 @@ impl Hexagon {
 	    color: random_color(),
 	    next_color: random_color(),
 	    transition_progress: 0.0,
-	    phase_offset: rand::gen_range(0.0, 6.28), // Random phase 0 to 2π
+	    phase_offset: rand::gen_range(0.0, PI * 2.), // Random phase 0 to 2π
 	}
     }
 
@@ -43,11 +44,11 @@ impl Hexagon {
 	// Use sine wave for smooth pulsing: 0.0 to 1.0
 	let raw_value = (time * PHASE_SPEED + self.phase_offset).sin();
 
-        let opacity = if raw_value > THRESHOLD {
-            ((raw_value - THRESHOLD) / (1.0 - THRESHOLD)).powf(2.0) // Smooth fade near peak
-        } else {
-            0.0
-        };
+	let opacity = if raw_value > THRESHOLD {
+	    ((raw_value - THRESHOLD) / (1.0 - THRESHOLD)).powf(2.0) // Smooth fade near peak
+	} else {
+	    0.0
+	};
 	if opacity <= 0.01 {
 	    return; // Don't draw nearly invisible hexagons
 	}
@@ -60,7 +61,8 @@ impl Hexagon {
 	    opacity,
 	);
 
-	draw_hexagon(self.x, self.y, self.radius, 0.0, true, current_color);
+	// draw_hexagon(self.x, self.y, self.radius, 0.0, true, current_color);
+	draw_heart(self.x, self.y, self.radius, current_color);
     }
 }
 
@@ -73,6 +75,38 @@ fn random_color() -> Color {
     )
 }
 
+fn draw_heart(x: f32, y: f32, size: f32, color: Color) {
+    // Heart shape using parametric equations
+    // We'll draw it as a series of triangles from the center
+    let segments = 100;
+    let mut points = Vec::new();
+
+    for i in 0..=segments {
+	let t = (i as f32 / segments as f32) * 2.0 * std::f32::consts::PI;
+
+	// Parametric heart equation
+
+	let heart_x = 16.0 * t.sin().powi(3);
+	let heart_y = -(13.0 * t.cos() - 5.0 * (2.0 * t).cos() - 2.0 * (3.0 * t).cos() - (4.0 * t).cos());
+
+	// Scale and translate
+	let scale = size / 20.0;
+	points.push(Vec2::new(
+	    x + heart_x * scale,
+	    y + heart_y * scale,
+	));
+    }
+
+    // Draw heart as triangles from center
+    for i in 0..segments {
+	draw_triangle(
+	    Vec2::new(x, y),
+	    points[i],
+	    points[i + 1],
+	    color,
+	);
+    }
+}
 fn draw_hexagon(x: f32, y: f32, radius: f32, rotation: f32, filled: bool, color: Color) {
     let mut points = Vec::new();
     for i in 0..6 {
