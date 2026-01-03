@@ -99,7 +99,7 @@ impl Shape {
 	    color: random_color(),
 	    next_color: random_color(),
 	    transition_progress: 0.0,
-	    phase_offset: rand::gen_range(0.0, 6.28),
+	    phase_offset: rand::gen_range(0.0, 2. * PI),
 	}
     }
 
@@ -299,7 +299,6 @@ async fn run_config_ui() {
     let mut selected_hexagon = config.shape == ShapeType::Hexagon;
     let mut selected_heart = config.shape == ShapeType::Heart;
     let mut threshold_slider_dragging = false;
-    let mut phase_speed_slider_dragging = false;
 
     loop {
 	clear_background(Color::from_rgba(240, 240, 240, 255));
