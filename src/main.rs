@@ -114,29 +114,29 @@ impl Shape {
     }
     fn draw(&self, time: f32, shape_type: ShapeType, threshold: f32) {
 	let phase_speed = (1. - threshold) * 10.;
-        let raw_value = (time * phase_speed + self.phase_offset).sin();
+	let raw_value = (time * phase_speed + self.phase_offset).sin();
 
-        let opacity = if raw_value > threshold {
-            ((raw_value - threshold) / (1.0 - threshold)).powf(2.0)
-        } else {
-            0.0
-        };
+	let opacity = if raw_value > threshold {
+	    ((raw_value - threshold) / (1.0 - threshold)).powf(2.0)
+	} else {
+	    0.0
+	};
 
-        if opacity <= 0.01 {
-            return;
-        }
+	if opacity <= 0.01 {
+	    return;
+	}
 
-        let current_color = Color::new(
-            self.color.r + (self.next_color.r - self.color.r) * self.transition_progress,
-            self.color.g + (self.next_color.g - self.color.g) * self.transition_progress,
-            self.color.b + (self.next_color.b - self.color.b) * self.transition_progress,
-            opacity,
-        );
+	let current_color = Color::new(
+	    self.color.r + (self.next_color.r - self.color.r) * self.transition_progress,
+	    self.color.g + (self.next_color.g - self.color.g) * self.transition_progress,
+	    self.color.b + (self.next_color.b - self.color.b) * self.transition_progress,
+	    opacity,
+	);
 
-        match shape_type {
-            ShapeType::Hexagon => draw_hexagon(self.x, self.y, self.radius, 0.0, true, current_color),
-            ShapeType::Heart => draw_heart(self.x, self.y, self.radius, current_color),
-        }
+	match shape_type {
+	    ShapeType::Hexagon => draw_hexagon(self.x, self.y, self.radius, 0.0, true, current_color),
+	    ShapeType::Heart => draw_heart(self.x, self.y, self.radius, current_color),
+	}
     }
 }
 
@@ -229,22 +229,23 @@ fn window_conf() -> Conf {
 
     let (fullscreen, width, height) = if args.len() > 1 {
 	let arg = &args[1];
-	match arg.to_lowercase().as_str() {
-	    "/s" | "-s" => {
-		(true, 0, 0)
-	    }
-	    "/p" | "-p" => {
-		std::process::exit(0);
-	    }
-	    "/c" | "-c" => {
-		// Configuration mode - will show config UI
-		(false, 400, 300)
-	    }
-	    _ => {
-		(false, 800, 600)
-	    }
+	let arg_lower = arg.to_lowercase();
+
+	if arg_lower.starts_with("/c") || arg_lower.starts_with("-c") {
+	    // Configuration mode - handle both /c and /c:hwnd formats
+	    (false, 500, 350)
+	} else if arg_lower.starts_with("/s") || arg_lower.starts_with("-s") {
+	    // Screensaver mode
+	    (true, 0, 0)
+	} else if arg_lower.starts_with("/p") || arg_lower.starts_with("-p") {
+	    // Preview mode - just exit for now
+	    std::process::exit(0);
+	} else {
+	    // Unknown or no argument - windowed mode
+	    (false, 800, 600)
 	}
     } else {
+	// No arguments - windowed mode for testing
 	(false, 800, 600)
     };
 
@@ -257,6 +258,7 @@ fn window_conf() -> Conf {
     }
 }
 
+
 #[macroquad::main(window_conf)]
 async fn main() {
     let args: Vec<String> = env::args().collect();
@@ -268,31 +270,6 @@ async fn main() {
 	run_screensaver().await;
     }
 }
-// #[macroquad::main(window_conf)]
-// async fn main() {
-//     let hex_radius = 40.0;
-
-//     let mut hexagons = Vec::new();
-//     for cell in create_hexgrid(hex_radius, screen_width(), screen_height()) {
-//	hexagons.push(Hexagon::new(cell.x, cell.y, hex_radius));
-//     }
-
-//     let mut time = 0.0;
-//     loop {
-//	clear_background(BLACK);
-
-//	let dt = get_frame_time();
-//	time += dt;
-
-//	// Update and draw all hexagons
-//	for hex in &mut hexagons {
-//	    hex.update(dt);
-//	    hex.draw(time);
-//	}
-
-//	next_frame().await
-//     }
-// }
 
 async fn run_config_ui() {
     let mut config = Config::load();
